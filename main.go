@@ -2,8 +2,6 @@ package main
 
 import (
 	"fmt"
-	"io"
-	"net/http"
 	"os"
 )
 
@@ -19,13 +17,26 @@ func main() {
 		os.Exit(1)
 	} else {
 		base_url = argsWithoutProg[0]
-		fmt.Println("starting crawl of: %s", base_url)
+		// fmt.Printf("starting crawl of: %s\n", base_url)
 
-		resp, _ := http.Get(base_url)
-		bytes, _ := io.ReadAll(resp.Body)
-		html := string(bytes)
-		urls, _ := getURLsFromHTML(html, base_url)
-		fmt.Println(urls)
+		// resp, err := http.Get(base_url)
+		// if err != nil {
+		// 	fmt.Println(err)
+		// 	os.Exit(1)
+		// }
+		// defer resp.Body.Close()
+		// bytes, _ := io.ReadAll(resp.Body)
+		// html := string(bytes)
+		// urls, _ := getURLsFromHTML(html, base_url)
+		// fmt.Println(urls)
+
+		// getHTML test
+		html, err := getHTML(base_url)
+		if err != nil {
+			fmt.Print(err)
+		} else {
+			fmt.Print("Got:\n", html)
+		}
 	}
 
 }
