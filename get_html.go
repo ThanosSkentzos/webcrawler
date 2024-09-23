@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strings"
 )
 
 func getHTML(rawURL string) (string, error) {
@@ -16,7 +17,8 @@ func getHTML(rawURL string) (string, error) {
 	if resp.StatusCode >= 400 {
 		return "", fmt.Errorf("status over 400 for url %s", rawURL)
 	}
-	if resp.Header.Get("content-type") != "text/html" {
+	content_type := resp.Header.Get("Content-Type")
+	if !strings.Contains(content_type, "text/html") {
 		return "", fmt.Errorf("content-type %s is not text/html", resp.Header.Get("content-type"))
 	}
 	bytes, err := io.ReadAll(resp.Body)

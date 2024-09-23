@@ -2,41 +2,42 @@ package main
 
 import (
 	"fmt"
-	"os"
+	"sort"
 )
 
 func main() {
-	argsWithoutProg := os.Args[1:]
-	nArgs := len(argsWithoutProg)
-	var base_url string
-	if nArgs < 1 {
-		fmt.Println("no website provided")
-		os.Exit(1)
-	} else if nArgs > 1 {
-		fmt.Println("too many arguments provided")
-		os.Exit(1)
-	} else {
-		base_url = argsWithoutProg[0]
-		// fmt.Printf("starting crawl of: %s\n", base_url)
+	// argsWithoutProg := os.Args[1:]
+	// nArgs := len(argsWithoutProg)
+	// var base_url string
+	// if nArgs < 1 {
+	// 	fmt.Println("no website provided")
+	// 	os.Exit(1)
+	// } else if nArgs > 1 {
+	// 	fmt.Println("too many arguments provided")
+	// 	os.Exit(1)
+	// } else {
+	// 	base_url = argsWithoutProg[0]
+	base_url := "https://google.com"
+	pages := make(map[string]int)
 
-		// resp, err := http.Get(base_url)
-		// if err != nil {
-		// 	fmt.Println(err)
-		// 	os.Exit(1)
-		// }
-		// defer resp.Body.Close()
-		// bytes, _ := io.ReadAll(resp.Body)
-		// html := string(bytes)
-		// urls, _ := getURLsFromHTML(html, base_url)
-		// fmt.Println(urls)
+	crawlPage(base_url, base_url, pages)
 
-		// getHTML test
-		html, err := getHTML(base_url)
-		if err != nil {
-			fmt.Print(err)
-		} else {
-			fmt.Print("Got:\n", html)
-		}
+	keys := make([]string, len(pages))
+
+	i := 0
+	for k := range pages {
+		keys[i] = k
+		i++
+	}
+	sort.SliceStable(keys,
+		func(i, j int) bool {
+			return pages[keys[i]] < pages[keys[j]]
+		})
+
+	for _, url := range keys {
+		count := pages[url]
+		fmt.Printf("%d - %s\n", count, url)
 	}
 
+	// }
 }
