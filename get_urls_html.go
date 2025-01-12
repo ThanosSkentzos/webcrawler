@@ -1,7 +1,6 @@
 package main
 
 import (
-	"errors"
 	"fmt"
 	"net/url"
 	"strings"
@@ -9,22 +8,14 @@ import (
 	"golang.org/x/net/html"
 )
 
-func getURLsFromHTML(htmlBody, rawBaseURL string) ([]string, error) {
-	urls := []string{}
-	if htmlBody == "" {
-		return urls, errors.New("empty HTML")
-	}
-	baseURL, err := url.Parse(rawBaseURL)
-	if err != nil {
-		return urls, fmt.Errorf("couldn't parse base URL: %v", err)
-	}
-
+func getURLsFromHTML(htmlBody string, baseURL *url.URL) ([]string, error) {
 	htmlReader := strings.NewReader(htmlBody)
 	doc, err := html.Parse(htmlReader)
 	if err != nil {
-		return urls, fmt.Errorf("couldn't parse HTML: %v", err)
+		return nil, fmt.Errorf("couldn't parse HTML: %v", err)
 	}
 
+	var urls []string
 	var traverseNodes func(*html.Node)
 	traverseNodes = func(node *html.Node) {
 		if node.Type == html.ElementNode && node.Data == "a" {

@@ -5,49 +5,55 @@ import (
 	"net/url"
 )
 
-func crawlPage(rawBaseURL, rawCurrentURL string, pages map[string]int) {
-	// SKIP IF RUNNING OTHER WEBSITE
+func (cfg *config) crawlPage(rawCurrentURL string) {
+	cfg.concurrencyControl <- struct{}{}
+	defer func() {
+		<-cfg.concurrencyControl
+		cfg.wg.Done()
+	}()
+
+	if len(cfg.pages) > cfg.maxPages {
+		return
+	}
+
 	currentURL, err := url.Parse(rawCurrentURL)
 	if err != nil {
 		fmt.Printf("Error - crawlPage: couldn't parse URL '%s': %v\n", rawCurrentURL, err)
 		return
 	}
-	baseURL, err := url.Parse(rawBaseURL)
-	if err != nil {
-		fmt.Printf("Error - crawlPage: couldn't parse URL '%s': %v\n", rawBaseURL, err)
+
+	// skip other websites
+	if currentURL.Hostname() != cfg.baseURL.Hostname() {
 		return
-	}
-	if currentURL.Hostname() != baseURL.Hostname() {
-		return
-	}
-	// normalize & check current url
-	normalizedURL, err := normalizeURL(rawCurrentURL)
-	if err != nil {
-		fmt.Printf("Error normalizing url %s: %v", normalizedURL, err)
 	}
 
-	// update pages
-	value, found := pages[normalizedURL]
-	if found {
-		pages[normalizedURL] = value + 1
+	normalizedURL, err := normalizeURL(rawCurrentURL)
+	if err != nil {
+		fmt.Printf("Error - normalizedURL: %v", err)
 		return
-	} else {
-		pages[normalizedURL] = 1
+	}
+
+	isFirst := cfg.addPageVisit(normalizedURL)
+	if !isFirst {
+		return
 	}
 
 	fmt.Printf("crawling %s\n", rawCurrentURL)
-	// get html, find urls
-	html, err := getHTML(rawCurrentURL)
+
+	htmlBody, err := getHTML(rawCurrentURL)
 	if err != nil {
-		fmt.Printf("Error parsing url %s: %v\n", normalizedURL, err)
-	}
-	urls, err := getURLsFromHTML(html, rawBaseURL)
-	if err != nil {
-		fmt.Printf("Error getting urls from url %s: %v\n", normalizedURL, err)
+		fmt.Printf("Error - getHTML: %v", err)
+		return
 	}
 
-	// crawl for all found
-	for _, url := range urls {
-		crawlPage(rawBaseURL, url, pages)
+	nextURLs, err := getURLsFromHTML(htmlBody, cfg.baseURL)
+	if err != nil {
+		fmt.Printf("Error - getURLsFromHTML: %v", err)
+		return
+	}
+
+	for _, nextURL := range nextURLs {
+		cfg.wg.Add(1)
+		go cfg.crawlPage(nextURL)
 	}
 }
