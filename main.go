@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"os"
-	"sort"
 	"strconv"
 )
 
@@ -43,22 +42,7 @@ func main() {
 		fmt.Printf("Done crawling.\n")
 
 		pages := cfg.pages
-		keys := make([]string, len(pages))
-
-		i := 0
-		for k := range pages {
-			keys[i] = k
-			i++
-		}
-		sort.SliceStable(keys,
-			func(i, j int) bool {
-				return pages[keys[i]] < pages[keys[j]]
-			})
-
-		for _, url := range keys {
-			count := pages[url]
-			fmt.Printf("%d - %s\n", count, url)
-		}
+		printReport(pages,base_url)
 
 	}
 }
